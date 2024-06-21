@@ -7,9 +7,14 @@ import { object, string } from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import { app, db } from "../../utils/Firebase";
-import { collection, addDoc, setDoc, doc } from "firebase/firestore";
+import { collection, addDoc, setDoc, getDoc, doc } from "firebase/firestore";
 import LogoBig from "../components/LogoBig";
 
 const Signup = () => {
@@ -19,7 +24,58 @@ const Signup = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
   console.log(typeof errorMessage, registrationError);
+
+  const loginWithGoogle = async () => {
+    //create a db using the uid as the doc Id
+    try {
+      // setIsLoading(true);
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const user = result.user;
+      console.log(user, result, credential);
+      const { displayName, email, accessToken, photoURL, uid } = user;
+      console.log(user.email);
+      sessionStorage.setItem("uid", uid);
+      sessionStorage.setItem("username", displayName);
+
+      const docRef = doc(db, "users", uid);
+      const docSnap = await getDoc(docRef);
+
+      // if(docSnap.exists()){
+      //   console.log('yesss!!')
+      // }else{
+      //   await setDoc(doc(db, "users", uid), {
+      //     email: email,
+      //     username: displayName.split(" ")[0],
+      //     todos: [],
+      //     goals: [],
+      //     goalsInProgress: [],
+      //     todosInProgress: [],
+      //     completedGoals: [],
+      //     completeTodos: [],
+      //   });
+      // }
+
+      if (accessToken) {
+        // setIsLoading(false);
+        navigate("/main/home");
+        toast.success("Welcome!");
+      } else {
+        // setIsLoading(false);
+        return;
+      }
+    } catch (error) {
+      // setIsLoading(false);
+      // const errorCode = error.code;
+      // const errorMessage = error.message;
+      // const email = error.customData.email;
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      toast.error(error.code);
+      console.log(error.message);
+    }
+  };
 
   //yup schema
   const userSchema = object({
@@ -66,18 +122,18 @@ const Signup = () => {
     const user = userCredential.user;
     console.log(user);
 
-     sessionStorage.setItem('uid', user.uid)
+    sessionStorage.setItem("uid", user.uid);
     //create a db using the uid as the doc Id
     try {
       await setDoc(doc(db, "users", user.uid), {
         email: data.email,
         username: data.username,
         todos: [],
-        goals:[],
+        goals: [],
         goalsInProgress: [],
         todosInProgress: [],
         completedGoals: [],
-        completeTodos: []
+        completeTodos: [],
       });
     } catch (err) {
       console.log(err);
@@ -95,7 +151,7 @@ const Signup = () => {
         // return;
       }
     } catch (error) {
-      setIsLoading(false)
+      setIsLoading(false);
       console.log(error);
       const errorCode = error.code;
       const errorMessage = error.message;
@@ -109,7 +165,7 @@ const Signup = () => {
 
   return (
     <section className="px-3 sm:px-0 overflow-x-hidden overflow-y-scroll flex flex-col items-center justify-center bg-blue-500 bg-opacity-35 bg-bg-login w-screen h-screen">
-      <LogoBig/>
+      <LogoBig />
       <form
         onSubmit={handleSubmit(registerUserHandler)}
         action="submit"
@@ -171,7 +227,7 @@ const Signup = () => {
         </button>
       </form>
       <p className="text-base text-center text-white my-3">OR</p>
-      <button className="text-base h-14 border w-full sm:w-[500px] border-white text-white rounded-[4px]">
+      <button onClick={loginWithGoogle} className="text-base h-14 border w-full sm:w-[500px] border-white text-white rounded-[4px]">
         SIGN UP WITH GOOGLE
       </button>
     </section>

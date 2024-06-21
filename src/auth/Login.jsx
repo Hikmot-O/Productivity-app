@@ -60,8 +60,6 @@ const Login = () => {
       //   });
       // }
 
-      
-
       if (accessToken) {
         // setIsLoading(false);
         navigate("/main/home");
@@ -77,7 +75,7 @@ const Login = () => {
       // const email = error.customData.email;
       const credential = GoogleAuthProvider.credentialFromError(error);
       toast.error(error.code);
-      console.log(error.message)
+      console.log(error.message);
     }
   };
 
@@ -141,7 +139,7 @@ const Login = () => {
 
   return (
     <section className="px-3 sm:px-0 overflow-x-hidden overflow-y-scroll flex flex-col items-center justify-center bg-blue-500 bg-opacity-35 bg-bg-login w-screen h-screen">
-      <LogoBig/>
+      <LogoBig />
       <form
         onSubmit={handleSubmit(loginSubmitHandler)}
         action="submit"
@@ -207,6 +205,12 @@ const Login = () => {
       >
         SIGNIN WITH GOOGLE
       </button>
+      <p className="pt-2 text-center text-white text-base">
+        Don't have an account?{" "}
+        <Link className="underline text-blue-500" to="/create-account">
+          Signup
+        </Link>
+      </p>
     </section>
   );
 };
